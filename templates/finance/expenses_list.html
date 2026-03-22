@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Expenses | Temple{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row justify-between items-center mb-8">
+    <div class="text-center sm:text-left mb-4 sm:mb-0">
+        <h1 class="text-4xl font-extrabold text-red-700 mb-2">Temple Expenses</h1>
+        <p class="text-lg text-gray-600">
+            {% if user.is_authenticated %}
+                Viewing completely itemized expenditure ledger.
+            {% else %}
+                Showing public expense summary. <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-800 underline transition">Log in</a> to view the detailed table.
+            {% endif %}
+        </p>
+    </div>
+    <form method="get" class="flex gap-2 items-center bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+        <label for="year-filter" class="font-semibold text-gray-700 whitespace-nowrap">Filter Year:</label>
+        <select name="year" id="year-filter" class="border p-2 rounded bg-gray-50 focus:ring focus:ring-red-200 outline-none" onchange="this.form.submit()">
+            <option value="all" {% if selected_year == 'all' %}selected{% endif %}>Consolidated (All-Time)</option>
+            {% for y in available_years %}
+                <option value="{{ y }}" {% if selected_year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white border-t-8 border-red-500 p-8 rounded-xl shadow-lg text-center transform hover:scale-105 transition duration-300">
+        <h3 class="text-lg font-bold text-gray-500 uppercase tracking-widest mb-2">Cleared Expenditures {% if selected_year != 'all' %}({{ selected_year }}){% endif %}</h3>
+        <p class="text-5xl font-extrabold text-red-600">₹{{ total_expenditures }}</p>
+    </div>
+    <div class="bg-white border-t-8 border-orange-500 p-8 rounded-xl shadow-lg text-center transform hover:scale-105 transition duration-300">
+        <h3 class="text-lg font-bold text-gray-500 uppercase tracking-widest mb-2">Unpaid Pending Dues {% if selected_year != 'all' %}({{ selected_year }}){% endif %}</h3>
+        <p class="text-5xl font-extrabold text-orange-600">₹{{ total_pending_dues }}</p>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<div class="bg-white shadow-md overflow-hidden sm:rounded-xl border border-gray-100">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-red-50">
+            <tr>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cost Description / Title</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Invoice / Receipt attached</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+            {% for record in expenses %}
+            <tr class="hover:bg-red-50 transition">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">{{ record.date|date:"d M Y" }}</td>
+                <td class="px-6 py-4">
+                    <div class="text-sm font-bold text-gray-900">{{ record.title }}</div>
+                    <div class="text-sm text-gray-500 mt-1">{{ record.description|default:""|truncatewords:15 }}</div>
+                </td>
+                <td class="px-6 py-4">
+                    {% if record.status == 'CLEARED' %}
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Paid/Cleared</span>
+                    {% else %}
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">Pending Due</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4">
+                    {% if record.receipt_image %}
+                        <a href="{{ record.receipt_image.url }}" target="_blank" class="text-xs text-blue-600 font-bold underline mb-1 inline-block">View Image</a>
+                    {% else %}
+                        <span class="text-xs text-gray-400">None attached</span>
+                    {% endif %}
+                    
+                    {% if record.extracted_text %}
+                        <details class="mt-2 text-xs text-gray-700 bg-gray-50 p-2 rounded border border-gray-200 w-[200px]">
+                            <summary class="cursor-pointer font-semibold text-gray-600 hover:text-gray-800">Scanned Text</summary>
+                            <pre class="mt-2 whitespace-pre-wrap font-mono text-[9px] leading-tight text-gray-600">{{ record.extracted_text }}</pre>
+                        </details>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-xl font-bold text-red-600">
+                    ₹{{ record.amount }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="px-6 py-12 text-center text-gray-500 text-lg">
+                    No expenditures found for this year.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl p-8 text-center text-gray-600 shadow-sm mt-8">
+    <svg class="mx-auto h-12 w-12 text-red-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+    </svg>
+    <h3 class="mt-2 text-xl font-bold text-gray-900">Itemized Expense Ledger is Protected</h3>
+    <p class="mt-1 text-sm text-gray-500">Please log in as a registered member or administrator to securely view the full expenditure list and attached receipts.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+sand(Gundlapadu),8600
+Kankara(Macherla),10000
+Kankara(KCVR Constructions),9338
+Tipper Charges,3600
+Tipper Mamulu,200
+JCB Charges,6000
+JCB Mamulu,200
+Miller and Coolie,30000
+Mestri Coolie for Base,9000
+Lunch(Day1),1120
+Lunch(Day2),630
+Mestri Coolie for levelling,1500
+Advance for Coolie(Suresh),1500
+Tanker Charges,2100
+Tractor Diesel Charges for Tanker,3500

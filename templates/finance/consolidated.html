@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Consolidated Dashboard | Temple{% endblock %}
+
+{% block content %}
+<div class="text-center mb-10">
+    <h1 class="text-4xl font-extrabold text-blue-900 mb-2">Year-by-Year Consolidated Analytics</h1>
+    <p class="text-lg text-gray-600">A high-level aggregated view of all securely tracked Temple finances across all active years.</p>
+</div>
+
+<!-- All Time Master Summary -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+    <div class="bg-white border-t-8 border-green-500 p-6 rounded-xl shadow-lg hover:shadow-xl transition">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Lifetime Donations</h3>
+        <p class="text-2xl font-extrabold text-green-600">₹{{ all_time_donations }}</p>
+    </div>
+    <div class="bg-white border-t-8 border-red-500 p-6 rounded-xl shadow-lg hover:shadow-xl transition">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Cleared Expense</h3>
+        <p class="text-2xl font-extrabold text-red-600">₹{{ all_time_expenses }}</p>
+    </div>
+    <div class="bg-white border-t-8 border-orange-500 p-6 rounded-xl shadow-lg hover:shadow-xl transition">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Pending Dues</h3>
+        <p class="text-2xl font-extrabold text-orange-600">₹{{ all_time_pending }}</p>
+    </div>
+    <div class="bg-gradient-to-br from-blue-500 to-blue-700 border-t-8 border-blue-900 p-6 rounded-xl shadow-lg text-white hover:shadow-xl transition">
+        <h3 class="text-xs font-bold text-blue-200 uppercase tracking-widest mb-1">Core Balance</h3>
+        <p class="text-2xl font-extrabold">₹{{ all_time_balance }}</p>
+    </div>
+</div>
+
+<!-- Year by Year Grid Table -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4 border-b pb-2">
+    <h2 class="text-2xl font-bold text-gray-800">Annual Financial Breakdowns</h2>
+    {% if user.is_staff or user.role == 'ADMIN' %}
+    <div class="flex gap-2 mt-4 md:mt-0">
+        <a href="?export=csv" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow transition text-sm">⬇️ Export Ledger (CSV)</a>
+        <a href="?export=excel" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded shadow transition text-sm">⬇️ Export Ledger (Excel)</a>
+    </div>
+    {% endif %}
+</div>
+<div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200 mb-12">
+    <table class="min-w-full divide-y divide-gray-200 text-center">
+        <thead class="bg-gray-100">
+            <tr>
+                <th scope="col" class="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Fiscal Year</th>
+                <th scope="col" class="px-6 py-4 text-xs font-bold text-green-600 uppercase tracking-wider">Donations</th>
+                <th scope="col" class="px-6 py-4 text-xs font-bold text-red-600 uppercase tracking-wider">Cleared Expenses</th>
+                <th scope="col" class="px-6 py-4 text-xs font-bold text-orange-600 uppercase tracking-wider">Unpaid Dues</th>
+                <th scope="col" class="px-6 py-4 text-xs font-bold text-blue-600 uppercase tracking-wider">Net Balance</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for data in yearly_data %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="px-6 py-4 whitespace-nowrap text-lg font-black text-gray-800">{{ data.year }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-lg font-bold text-green-600">₹{{ data.donations }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-lg font-bold text-red-600">-₹{{ data.expenses }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-lg font-bold text-orange-600">₹{{ data.pending_dues }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-lg font-bold {% if data.balance >= 0 %}text-blue-600{% else %}text-orange-500{% endif %}">
+                    ₹{{ data.balance }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="px-6 py-8 text-center text-gray-500 text-lg">
+                    No financial history is logged in the system yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="text-center">
+    <a href="{% url 'donations_list' %}" class="mx-2 inline-block font-semibold text-green-600 hover:text-green-800 underline">View Itemized Donations →</a>
+    <a href="{% url 'expenses_list' %}" class="mx-2 inline-block font-semibold text-red-600 hover:text-red-800 underline">View Itemized Expenses →</a>
+</div>
+{% endblock %}

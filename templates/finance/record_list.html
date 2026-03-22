@@ -2,33 +2,51 @@
 {% block title %}Finances | Temple{% endblock %}
 
 {% block content %}
-<div class="mb-8 text-center sm:text-left">
-    <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Temple Financial Transparency</h1>
-    <p class="text-lg text-gray-600">All registered users have read-only access to our financial records. Only Admins can modify these from the <a href="/admin/" class="text-orange-600 hover:text-orange-800 underline font-semibold transition">Admin Panel</a>.</p>
+<div class="flex flex-col sm:flex-row justify-between items-center mb-8">
+    <div class="text-center sm:text-left mb-4 sm:mb-0">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Temple Financial Transparency</h1>
+        <p class="text-lg text-gray-600">
+            {% if user.is_authenticated %}
+                Viewing full financial records. <a href="/admin/" class="text-orange-600 hover:text-orange-800 underline font-semibold transition">Go to Admin Panel</a>
+            {% else %}
+                Showing public financial summaries. <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-800 underline transition">Log in</a> to view detailed donor and expense lists.
+            {% endif %}
+        </p>
+    </div>
+    <form method="get" class="flex gap-2 items-center bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+        <label for="year-filter" class="font-semibold text-gray-700 whitespace-nowrap">Filter Year:</label>
+        <select name="year" id="year-filter" class="border p-2 rounded bg-gray-50 focus:ring focus:ring-orange-200 outline-none" onchange="this.form.submit()">
+            <option value="all" {% if selected_year == 'all' %}selected{% endif %}>Consolidated (All-Time)</option>
+            {% for y in available_years %}
+                <option value="{{ y }}" {% if selected_year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+    </form>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-white border-t-4 border-green-500 p-6 rounded-xl shadow-md hover:shadow-lg transition">
-        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-1">Total Donations</h3>
+        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-1">Total Donations {% if selected_year != 'all' %}({{ selected_year }}){% endif %}</h3>
         <p class="text-4xl font-extrabold text-green-600">₹{{ total_donations }}</p>
     </div>
     <div class="bg-white border-t-4 border-red-500 p-6 rounded-xl shadow-md hover:shadow-lg transition">
-        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-1">Total Expenditures</h3>
+        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-1">Total Expenditures {% if selected_year != 'all' %}({{ selected_year }}){% endif %}</h3>
         <p class="text-4xl font-extrabold text-red-600">₹{{ total_expenditures }}</p>
     </div>
     <div class="bg-white border-t-4 border-orange-500 p-6 rounded-xl shadow-md hover:shadow-lg transition">
-        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-1">Current Balance</h3>
+        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-1">Current Balance {% if selected_year != 'all' %}({{ selected_year }}){% endif %}</h3>
         <p class="text-4xl font-extrabold text-orange-600">₹{{ balance }}</p>
     </div>
 </div>
 
+{% if user.is_authenticated %}
 <div class="bg-white shadow-md overflow-hidden sm:rounded-xl border border-gray-100">
     <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
             <tr>
                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
-                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Title / Info</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Title & Docs</th>
                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
             </tr>
         </thead>
@@ -40,12 +58,27 @@
                     {% if record.record_type == 'DONATION' %}
                         <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-green-100 text-green-800">Donation</span>
                     {% else %}
-                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800">Expenditure</span>
+                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800">Expense</span>
                     {% endif %}
                 </td>
                 <td class="px-6 py-4">
                     <div class="text-sm font-bold text-gray-900">{{ record.title }}</div>
                     <div class="text-sm text-gray-500 mt-1">{{ record.description|default:""|truncatewords:15 }}</div>
+                    
+                    {% if record.record_type == 'EXPENDITURE' and record.receipt_image %}
+                        <a href="{{ record.receipt_image.url }}" target="_blank" class="text-xs text-blue-600 underline mt-2 inline-block">View Receipt Image</a>
+                    {% endif %}
+                    
+                    {% if record.record_type == 'EXPENDITURE' and record.extracted_text %}
+                        <details class="mt-2 text-xs text-gray-700 bg-gray-50 p-3 rounded border border-gray-200">
+                            <summary class="cursor-pointer font-semibold text-gray-600 hover:text-gray-800">Show Scanned/Translated Receipt Text</summary>
+                            <pre class="mt-2 whitespace-pre-wrap font-mono text-[10px] leading-tight text-gray-600">{{ record.extracted_text }}</pre>
+                        </details>
+                    {% endif %}
+                    
+                    {% if record.record_type == 'DONATION' and record.receipt_pdf %}
+                        <a href="{{ record.receipt_pdf.url }}" target="_blank" class="text-xs text-green-600 font-bold underline mt-2 inline-block bg-green-50 px-2 py-1 rounded border border-green-200 hover:bg-green-100">📄 Download Official PDF Receipt</a>
+                    {% endif %}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-lg font-bold {% if record.record_type == 'DONATION' %}text-green-600{% else %}text-red-600{% endif %}">
                     ₹{{ record.amount }}
@@ -54,11 +87,20 @@
             {% empty %}
             <tr>
                 <td colspan="4" class="px-6 py-12 text-center text-gray-500 text-lg">
-                    No financial records found.
+                    No financial records found for this year.
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+{% else %}
+<div class="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-8 text-center text-gray-600 shadow-sm mt-8">
+    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+    </svg>
+    <h3 class="mt-2 text-xl font-bold text-gray-900">Detailed Ledger is Protected</h3>
+    <p class="mt-1 text-sm text-gray-500">Please log in as a registered member or administrator to securely view the full itemized donor lists and download official PDF receipts.</p>
+</div>
+{% endif %}
 {% endblock %}
