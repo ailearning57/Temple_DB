@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Finances | Temple{% endblock %}
+
+{% block content %}
+<div class="mb-8 text-center sm:text-left">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Temple Financial Transparency</h1>
+    <p class="text-lg text-gray-600">All registered users have read-only access to our financial records. Only Admins can modify these from the <a href="/admin/" class="text-orange-600 hover:text-orange-800 underline font-semibold transition">Admin Panel</a>.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white border-t-4 border-green-500 p-6 rounded-xl shadow-md hover:shadow-lg transition">
+        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-1">Total Donations</h3>
+        <p class="text-4xl font-extrabold text-green-600">₹{{ total_donations }}</p>
+    </div>
+    <div class="bg-white border-t-4 border-red-500 p-6 rounded-xl shadow-md hover:shadow-lg transition">
+        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-1">Total Expenditures</h3>
+        <p class="text-4xl font-extrabold text-red-600">₹{{ total_expenditures }}</p>
+    </div>
+    <div class="bg-white border-t-4 border-orange-500 p-6 rounded-xl shadow-md hover:shadow-lg transition">
+        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-1">Current Balance</h3>
+        <p class="text-4xl font-extrabold text-orange-600">₹{{ balance }}</p>
+    </div>
+</div>
+
+<div class="bg-white shadow-md overflow-hidden sm:rounded-xl border border-gray-100">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Title / Info</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+            {% for record in records %}
+            <tr class="hover:bg-orange-50 transition">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">{{ record.date|date:"d M Y" }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    {% if record.record_type == 'DONATION' %}
+                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-green-100 text-green-800">Donation</span>
+                    {% else %}
+                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800">Expenditure</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm font-bold text-gray-900">{{ record.title }}</div>
+                    <div class="text-sm text-gray-500 mt-1">{{ record.description|default:""|truncatewords:15 }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-lg font-bold {% if record.record_type == 'DONATION' %}text-green-600{% else %}text-red-600{% endif %}">
+                    ₹{{ record.amount }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="px-6 py-12 text-center text-gray-500 text-lg">
+                    No financial records found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

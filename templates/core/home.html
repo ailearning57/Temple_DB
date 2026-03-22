@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Home | Temple{% endblock %}
+
+{% block content %}
+<div class="text-center py-16 px-4 sm:px-6 lg:px-8">
+    <h1 class="text-5xl font-extrabold text-gray-900 tracking-tight mb-6">
+        {{ info.name|default:"Welcome to Om Temple" }}
+    </h1>
+    <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        {{ info.about_us|default:"A sanctuary for peace, devotion, and community service. We believe in transparency and collective growth." }}
+    </p>
+</div>
+
+<div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 hover:shadow-2xl transition duration-300">
+        <div class="p-8">
+            <div class="uppercase tracking-wide text-sm text-orange-600 font-bold mb-1">Community</div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-3">Events & Services</h3>
+            <p class="text-gray-600 mb-4">Join us for daily pujas, special festival celebrations, and community gatherings aimed at spiritual enrichment.</p>
+        </div>
+        <div class="bg-gray-50 px-8 py-4 border-t border-gray-100">
+            <span class="text-orange-600 font-medium cursor-not-allowed opacity-50">View Schedule</span>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 hover:shadow-2xl transition duration-300">
+        <div class="p-8">
+            <div class="uppercase tracking-wide text-sm text-indigo-600 font-bold mb-1">Transparency</div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-3">Donations & Finance</h3>
+            <p class="text-gray-600 mb-4">We maintain complete transparency. Registered users can view our financial records, project expenditures, and donation histories.</p>
+        </div>
+        <div class="bg-gray-50 px-8 py-4 border-t border-gray-100">
+            {% if not user.is_authenticated %}
+                <a href="{% url 'login' %}" class="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center">
+                    Log in to view records
+                    <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </a>
+            {% else %}
+                <span class="text-green-600 font-medium inline-flex items-center">
+                    Access Granted - Finance Portal
+                    <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

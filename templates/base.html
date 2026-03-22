@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Temple{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-orange-50 flex flex-col min-h-screen">
+    <nav class="bg-orange-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 font-bold text-2xl">
+                    <a href="{% url 'home' %}">ॐ Temple</a>
+                </div>
+                <div class="hidden md:flex space-x-4">
+                    <a href="{% url 'home' %}" class="hover:bg-orange-500 px-3 py-2 rounded-md font-medium transition">Home</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'finance_list' %}" class="hover:bg-orange-500 px-3 py-2 rounded-md font-medium transition">Finance</a>
+                        {% if user.is_staff or user.role == 'ADMIN' %}
+                            <a href="/admin/" class="hover:bg-orange-500 px-3 py-2 rounded-md font-medium transition text-yellow-200">Admin Panel</a>
+                        {% endif %}
+                        <form method="post" action="{% url 'logout' %}" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="hover:bg-orange-500 px-3 py-2 rounded-md font-medium transition">Logout</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="bg-white text-orange-600 hover:bg-orange-100 px-4 py-2 rounded-md font-bold transition shadow-sm">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="bg-orange-900 text-orange-200 py-6 mt-auto">
+        <div class="text-center text-sm">
+            &copy; 2026 Temple Foundation. Guided by devotion and transparency.
+        </div>
+    </footer>
+</body>
+</html>
